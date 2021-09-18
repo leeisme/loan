@@ -1,0 +1,46 @@
+{# templates/index.html.twig #}
+{# @var form \Symfony\Component\Form\FormView #}
+{# @var loanData array #}
+{# @var formErrors array|string[] #}
+
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	
+	<div class="container w-50 mt-2 border">
+		<div class="form-row">
+			<div class="col-sm-6 offset-sm-3 text-center">
+				<h3 class="text-primary">Loan Estimation Tool</h3>
+
+				<p class="text-secondary">Fill out the short form below to get a quick estimate on a loan</p>
+
+				<div class="content">
+					{{ form(form) }}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="results">
+	{% if formErrors %}
+		<div class="container w-50 mt-2">
+			{% for error in formErrors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</div>
+	{% elseif loanData %}
+		<h2>Your Estimated loan:</h2>
+		<ul>
+			<li>Origination Fee: ${{ loanData.fee }}</li>
+			<li>Interest Rate: {{ loanData.interestRate }}%</li>
+			<li>Monthly Payment: ${{ loanData.payment | number_format(2) }}</li>
+		</ul>
+		
+		<h2>Loan Amortization</h2>
+		
+	{% endif %}
+	</div>
+
+{% endblock %}
