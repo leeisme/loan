@@ -12,8 +12,6 @@ class DefaultTest extends WebTestCase
         $crawler = $client->request('GET', '/');
 
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', 'Loan Estimation Tool');
-        
-        
+        $this->assertSelectorTextContains('h3', 'Loan Estimation Tool');
     }
 }

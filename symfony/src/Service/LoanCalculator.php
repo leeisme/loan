@@ -55,31 +55,53 @@ class LoanCalculator
 	 * @param int $termInMonths Number of months for the loan
 	 * @param int $termIntervals Payment terms
 	 * @return array
-	 * TODO Add support for zero (0) interest rate. Function now fails with 0%.
 	 */
 	public function getPaymentSchedule(
 		float $loanAmount,
 		float $interestRate,
 		int $termInMonths,
 		int $termIntervals = 12
-	): array {
+	): array
+	{
+		if ($termInMonths <= 0) {
+			throw new \RuntimeException('Term must be greater than zero (0)');
+		}
+		
+		if ($loanAmount <= 0) {
+			throw new \RuntimeException(
+				'Loan amount must be greater then zero (0)'
+			);
+		}
+		
 		$schedule = [];
 		$i = 1;
 		$period = $termInMonths;
-		$interestRate = ($interestRate / 100) / $termIntervals;
+		$pmtAmount = $loanAmount / $termInMonths;
+		
+		if ($interestRate > 0) {
+			$interestRate = ($interestRate / 100) / $termIntervals;
+		}
 		
 		while ($i <= $termInMonths) {
-			$pmtAmount =  (1 - pow((1 + $interestRate), -$period));
-			$termPay = ($loanAmount * $interestRate) / $pmtAmount;
-			$interest = $loanAmount * $interestRate;
-			$principal = $termPay - $interest;
-			$balance = $loanAmount - $principal;
+			
+			if ($interestRate > 0) {
+				$pmtAmount = (1 - pow((1 + $interestRate), -$period));
+				$termPay = ($loanAmount * $interestRate) / $pmtAmount;
+				$interest = $loanAmount * $interestRate;
+				$principal = $termPay - $interest;
+				$balance = $loanAmount - $principal;
+			} else {
+				$interest = 0;
+				$termPay = $pmtAmount;
+				$balance = $loanAmount - $pmtAmount;
+				$principal = $pmtAmount;
+			}
 			
 			$schedule[] = [
-				'payment' 	=> round($termPay, 2),
-				'interest' 	=> round($interest, 2),
+				'payment' => round($termPay, 2),
+				'interest' => round($interest, 2),
 				'principal' => round($principal, 2),
-				'balance' 	=> round($balance, 2)
+				'balance' => round($balance, 2)
 			];
 			
 			$loanAmount = $balance;

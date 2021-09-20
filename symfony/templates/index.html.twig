@@ -31,15 +31,51 @@
 			{% endfor %}
 		</div>
 	{% elseif loanData %}
-		<h2>Your Estimated loan:</h2>
-		<ul>
-			<li>Origination Fee: ${{ loanData.fee }}</li>
-			<li>Interest Rate: {{ loanData.interestRate }}%</li>
-			<li>Monthly Payment: ${{ loanData.payment | number_format(2) }}</li>
-		</ul>
-		
-		<h2>Loan Amortization</h2>
-		
+		<div class="container w-50 mt-2 border">
+			<div class="text-center">
+				<h4 class="text-success">Your Estimated loan:</h4>
+				<ul class="text-info list-inline list-inline-item">
+					<li>Origination Fee: ${{ loanData.fee }}</li>
+					<li>Interest Rate: {{ loanData.interestRate }}%</li>
+					<li>Monthly Payment: ${{ loanData.payment | number_format(2) }}</li>
+				</ul>
+				
+				<div class="mb-3 mp-2">
+					<button 
+						class="btn btn-success btn-sm" 
+						type="button" 
+						data-toggle="collapse" 
+						data-target="#collapse-container" 
+						aria-expanded="false" 
+						aria-controls="collapse-container">
+						Show Amortization
+					</button>
+				</div>
+			</div>
+			
+			<div class="collapse" id="collapse-container">
+				<table class="table table-striped table-condensed mb-4">
+					<thead>
+					<tr>
+						<th scope="col">Payment</th>
+						<th scope="col">Interest</th>
+						<th scope="col">Principal</th>
+						<th scope="col">Balance</th>
+					</tr>
+					</thead>
+					<tbody>
+					{% for term in loanData.schedule %}
+						<tr>
+							<td>${{ term.payment|number_format(2) }}</td>
+							<td>${{ term.interest|number_format(2) }}</td>
+							<td>${{ term.principal|number_format(2) }}</td>
+							<td>${{ term.balance|number_format(2) }}</td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
 	{% endif %}
 	</div>
 

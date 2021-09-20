@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Form\LoanType;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +17,13 @@ use App\Service\LoanCalculator;
 class DefaultController extends AbstractController
 {
 
-	/** @var float Typically retrieved from datastore or algo */
+	// TODO: Retrieve from datastore or algo
 	const MAX_PMT_INCOME_RATIO = 0.15;
+	const MIN_INCOME = 1000;
 	
 	/**
 	 * @Route("/", name="home")
+	 * @throws Exception
 	 */
 	public function home(Request $request, LoanParameter $loanParameterService, LoanCalculator $loanCalculatorService): Response
 	{
@@ -33,15 +36,27 @@ class DefaultController extends AbstractController
 		
 		if ($form->isSubmitted() && $form->isValid()) {
 			$data = $form->getData();
+			$maxAmount = $loanParameterService->getMaxAmount($data['creditScore']);
 			
 			//  Process submitted data
 			try {
 				//  Check for requesting too large of an amount
-				if ($data['amount'] > $loanParameterService->getMaxAmount($data['creditScore'])) {
-					$formErrors[] = 'The maximum loan amount for your credit score is: $'.$loanParameterService->getMaxAmount($data['creditScore']);
+				if ($data['amount'] > $maxAmount) {
+					$formErrors[] = 'The maximum loan amount for your credit ' . 
+						'score is: $' . $maxAmount;
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				$formErrors = ['Please check your inputs and resubmit the form'];
+			}
+			
+			// Income must be at least x
+			if (
+				empty($formErrors) && 
+				((float) $data['income'] < static::MIN_INCOME)
+			) {
+				$errMsg = sprintf('$%.2f', self::MIN_INCOME);
+				$errMsg = 'Income must be at least ' . $errMsg;
+				$formErrors = [$errMsg];
 			}
 			
 			// Payment cannot exceed % of monthly income.
@@ -50,7 +65,7 @@ class DefaultController extends AbstractController
 					
 					$fee = $loanParameterService->getOriginationFee($data['amount']);
 					$income = $data['income'];
-					$maxPmt = round(static::MAX_PMT_INCOME_RATIO * $income);
+					$maxPmt = round(static::MAX_PMT_INCOME_RATIO * $income, 2);
 					
 					$interestRate = $loanParameterService->getInterestRate(
 						$data['term'], 
@@ -75,8 +90,7 @@ class DefaultController extends AbstractController
 						$formErrors = [$errMsg];
 					}
 					
-					
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					$formErrors = [
 						'Please checkout your inputs and resubmit the form'
 					];
@@ -85,14 +99,31 @@ class DefaultController extends AbstractController
 			
 			if (empty($formErrors)) {
 				try {
-					$interestRate = $loanParameterService->getInterestRate($data['term'], $data['creditScore']);
+					
+					$interestRate = $loanParameterService->getInterestRate(
+						$data['term'], 
+						$data['creditScore']
+					);
+					
 					$fee = $loanParameterService->getOriginationFee($data['amount']);
-					$payment = $loanCalculatorService->getMonthlyPayment($data['amount'] + $fee, $interestRate, $data['term']);
+					
+					$payment = $loanCalculatorService->getMonthlyPayment(
+						$data['amount'] + $fee, 
+						$interestRate, 
+						$data['term']
+					);
+					
+					$schedule = $loanCalculatorService->getPaymentSchedule(
+						$data['amount'],
+						$interestRate,
+						$data['term']
+					);
 					
 					$loanData['interestRate'] = $interestRate;
 					$loanData['fee'] = $fee;
 					$loanData['payment'] = $payment;
-				} catch (\Exception $e) {
+					$loanData['schedule'] = $schedule;
+				} catch (Exception $e) {
 					$formErrors = ['Please check your inputs and resubmit the form'];
 				}
 			}
@@ -108,6 +139,4 @@ class DefaultController extends AbstractController
 			]
 		);
 	}
-	
-	
 }
