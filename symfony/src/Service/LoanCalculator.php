@@ -73,10 +73,12 @@ class LoanCalculator
 			);
 		}
 		
+		$result = [];
 		$schedule = [];
 		$i = 1;
 		$period = $termInMonths;
 		$pmtAmount = $loanAmount / $termInMonths;
+		$totalInterest = 0;
 		
 		if ($interestRate > 0) {
 			$interestRate = ($interestRate / 100) / $termIntervals;
@@ -88,6 +90,7 @@ class LoanCalculator
 				$pmtAmount = (1 - pow((1 + $interestRate), -$period));
 				$termPay = ($loanAmount * $interestRate) / $pmtAmount;
 				$interest = $loanAmount * $interestRate;
+				$totalInterest+= $interest;
 				$principal = $termPay - $interest;
 				$balance = $loanAmount - $principal;
 			} else {
@@ -109,6 +112,9 @@ class LoanCalculator
 			$i++;
 		}
 		
-		return $schedule;
+		$result['interest'] = $totalInterest;
+		$result['schedule'] = $schedule;
+		
+		return $result;
 	}
 }

@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
@@ -45,6 +46,8 @@ class LoanType extends AbstractType
 					'max' => 50000,
 					'step' => 500
 				],
+				'scale' => 0,
+				'invalid_message' => 'Please enter a value of at least $1,000'
 			])
 		    ->add('creditScore', ChoiceType::class, [
 		    	//  In a real application these options would come from either the database or another component, for the purpose of this exercise repeating them helps to keep the scope limited 
@@ -55,6 +58,9 @@ class LoanType extends AbstractType
 				    'Excellent (720-850)' => 'excellent',
 			    ],
 		    ])
+			->add('asPdf', HiddenType::class, [
+				
+			])
 		    ->add('submit', SubmitType::class, [
 		    	'label' => 'Submit'
 		    ]);

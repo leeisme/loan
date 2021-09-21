@@ -6,6 +6,22 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+	<script>
+		window.onload = function() {
+
+			document.querySelector('#download').addEventListener('click', function(e) {
+				let frm = document.querySelector('form')
+				let newForm = frm.cloneNode(true)
+				newForm.id = 'loanschdule';
+				newForm.name = 'loanschedule'
+				newForm.target = '_blank';
+				newForm.loan_asPdf.value = '1'
+				newForm.classList.add('d-none')
+				document.body.appendChild(newForm);
+				newForm.submit();
+			})
+		}
+	</script>
 	
 	<div class="container w-50 mt-2 border">
 		<div class="form-row">
@@ -31,14 +47,26 @@
 			{% endfor %}
 		</div>
 	{% elseif loanData %}
-		<div class="container w-50 mt-2 border">
+		<div class="container w-50 mt-2 mb-5">
 			<div class="text-center">
-				<h4 class="text-success">Your Estimated loan:</h4>
-				<ul class="text-info list-inline list-inline-item">
-					<li>Origination Fee: ${{ loanData.fee }}</li>
-					<li>Interest Rate: {{ loanData.interestRate }}%</li>
-					<li>Monthly Payment: ${{ loanData.payment | number_format(2) }}</li>
-				</ul>
+				<h4 class="text-success">Your Estimated loan</h4>
+				<div>
+					<table class="table table-borderless">
+						<tbody>
+						<tr>
+							<td class="no-border">Loan:<br>${{ loanData.amount }}</td>
+							<td class="no-border">Rate:<br>{{ loanData.interestRate }}%</td>
+							<td class="no-border">Origination Fee:<br>${{ loanData.fee }}</td>
+						</tr>
+						<tr>
+							<td class="no-border">Payment<br>${{ loanData.payment }}</td>
+							<td class="no-border">APR<br>TBD</td>
+							<td class="no-border">Interest<br>${{ loanData.interest|number_format(2) }}</td>
+							<td class="no-border"></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
 				
 				<div class="mb-3 mp-2">
 					<button 
@@ -49,6 +77,12 @@
 						aria-expanded="false" 
 						aria-controls="collapse-container">
 						Show Amortization
+					</button>
+					<button
+						class="btn btn-info btn-sm"
+						id="download"
+						type="button">
+						View/Print
 					</button>
 				</div>
 			</div>
